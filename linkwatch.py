@@ -7,8 +7,8 @@ def main():
     primaryLink = "10.120.0.1"
     secondaryLink = "10.121.0.1"
     bridgename = "testbr0"
-#    ifname = "vxlan0"
-#    termif = "tun0"
+    ifname = "vxlan0"
+    local_ip = "10.120.0.3"
     waitsec = "0.5"
     pinginterval = 2
     pingcommand= "ping -c 1 -w "+waitsec+ " "
@@ -33,6 +33,8 @@ def main():
             secondaryLink = arg
         elif opt in ("-b", "--bridge"):
             bridgename = arg
+        elif opt in "-i", "--ifname"):
+            ifname = arg
     print("----------------------------------------------------------------------------------")
     while True:
         if(os.system(pingcommand + primaryLink)):
@@ -40,15 +42,17 @@ def main():
         # If secondaryLink is available
               if not (os.system(pingcommand + secondaryLink)):
                   print("Secondary link is available for usage")
+                  print("Delete the virtual interface")
+                  os.system("ovs-vsctl del-port"+bridgename+ " "+ifname)
                   print("Clearing the flows from the bridge "+bridgename)
                   os.system("ovs-ofctl del-flows "+bridgename + " cookie=0x20000000000000/-1")
               else:
                   while (os.system(pingcommand + primaryLink)):    # Lets run this forever or until the link is up
-                      time.sleep(5)
+                      time.sleep(pinginterval)
                       pass
+                  os.system("ovs-vsctl add-port "+bridgename+ " " ifname " -- set Interface " +ifname+" type=vxlan options:local_ip="+local_ip+"options:remote_ip="+primarylink)
         time.sleep(pinginterval)
-        
+
 
 if __name__ == "__main__":
     main()
-
