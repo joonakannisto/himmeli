@@ -39,19 +39,25 @@ def main():
     while True:
         if(os.system(pingcommand + primaryLink)):
            if(os.system(pingcommand + primaryLink)):
-        # If secondaryLink is available
+        # Two pings before so that it does not flap unnecessarily
+        # If secondaryLink is available we can save half a second of waiting
               if not (os.system(pingcommand + secondaryLink)):
                   print("Secondary link is available for usage")
                   print("Delete the virtual interface")
                   os.system("ovs-vsctl del-port"+bridgename+ " "+ifname)
                   print("Clearing the flows from the bridge "+bridgename)
                   os.system("ovs-ofctl del-flows "+bridgename + " cookie=0x20000000000000/-1")
+
               elif (os.system(pingcommand + primaryLink)):
-                  while (os.system(pingcommand + primaryLink)):    # Lets run this forever or until the link is up
+                  os.system("ovs-vsctl del-port"+bridgename+ " "+ifname)
+                  print("Clearing the flows from the bridge "+bridgename)
+                  os.system("ovs-ofctl del-flows "+bridgename + " cookie=0x20000000000000/-1")
+
+              while (os.system(pingcommand + primaryLink)):    # Lets run this forever or until the link is up
                       time.sleep(pinginterval)
                       pass
-                  #We're out of the loop so lets add the interface 
-                  os.system("ovs-vsctl add-port "+bridgename+ " " ifname " -- set Interface " +ifname+" type=vxlan options:local_ip="+local_ip+"options:remote_ip="+primarylink)
+        #We're out of the loop so lets add the interface
+        os.system("ovs-vsctl add-port "+bridgename+ " " ifname " -- set Interface " +ifname+" type=vxlan options:local_ip="+local_ip+"options:remote_ip="+primarylink)
         time.sleep(pinginterval)
 
 
