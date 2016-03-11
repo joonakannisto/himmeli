@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, sys, getopt, time
+import os, sys, getopt, time, string
 #import netifaces as ni
 
 def main():
@@ -13,9 +13,9 @@ def main():
     pinginterval = 2
     pingcommand= "ping -c 1 -w "+waitsec+ " "
     helpdesk="linkwatch -p <primary tun dest ip> -s <secondary tun dest ip> -b <bridge>"
-
-    counter = 0
-
+    ofportFlow=""
+    ofportNumber=""
+    
     print("Welcome to linkwatch SDN himmeli")
     try:
         opts, args = getopt.getopt(sys.argv[1:], "p:s:b:h", ["help", "primaryLink=", "secondaryLink=","bridgname="])
@@ -43,21 +43,20 @@ def main():
         # If secondaryLink is available we can save half a second of waiting
               if not (os.system(pingcommand + secondaryLink)):
                   print("Secondary link is available for usage")
-                  print("Delete the virtual interface")
-                  os.system("ovs-vsctl del-port"+bridgename+ " "+ifname)
                   print("Clearing the flows from the bridge "+bridgename)
-                  os.system("ovs-ofctl del-flows "+bridgename + " cookie=0x20000000000000/-1")
+                  ofportFlow=os.popen("ovsdb-tool query '[\"Open_vSwitch\", {\"op\":\"select\", \"table\":\"Interface\", \"where\": [[\"name\",\"==\",\""+ifname+"\"]]}]'").read()
+                  ofportNumber=ofportNumber[ofportNumber.rfind("\"ofport\":")+9:ofportNumber.rfind("\"ofport\":")+10]
+                  
+                  #                  os.system("ovs-ofctl del-flows "+bridgename + " cookie=0x20000000000000/-1")
 
-              elif (os.system(pingcommand + primaryLink)):
-                  os.system("ovs-vsctl del-port"+bridgename+ " "+ifname)
-                  print("Clearing the flows from the bridge "+bridgename)
-                  os.system("ovs-ofctl del-flows "+bridgename + " cookie=0x20000000000000/-1")
+#             elif (os.system(pingcommand + primaryLink)):
+#                 os.system("ovs-vsctl del-port"+bridgename+ " "+ifname)
+#                 print("Clearing the flows from the bridge "+bridgename)
+#                 os.system("ovs-ofctl del-flows "+bridgename + " cookie=0x20000000000000/-1")
 
               while (os.system(pingcommand + primaryLink)):    # Lets run this forever or until the link is up
                       time.sleep(pinginterval)
                       pass
-        #We're out of the loop so lets add the interface
-        os.system("ovs-vsctl add-port "+bridgename+ " " ifname " -- set Interface " +ifname+" type=vxlan options:local_ip="+local_ip+"options:remote_ip="+primarylink)
         time.sleep(pinginterval)
 
 
