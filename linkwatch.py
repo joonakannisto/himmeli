@@ -47,7 +47,7 @@ def main():
                   ofportFlow=os.popen("ovsdb-tool query '[\"Open_vSwitch\", {\"op\":\"select\", \"table\":\"Interface\", \"where\": [[\"name\",\"==\",\""+ifname+"\"]]}]'").read()
                   #ofportNumber=ofportNumber[ofportNumber.rfind("\"ofport\":")+9:ofportNumber.rfind("\"ofport\":")+10]
                   try:
-                      ofportFlow=json.loads(ofortFlow)
+                      ofportFlow=json.loads(ofportFlow)
                       ofportnumber=ofportFlow[0]["rows"]["ofport"]
                   except:
                       os.system("ovs-ofctl del-flows "+bridgename + " cookie=0x20000000000000/-1")
