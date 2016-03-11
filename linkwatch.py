@@ -46,10 +46,11 @@ def main():
                   os.system("ovs-vsctl del-port"+bridgename+ " "+ifname)
                   print("Clearing the flows from the bridge "+bridgename)
                   os.system("ovs-ofctl del-flows "+bridgename + " cookie=0x20000000000000/-1")
-              else:
+              elif (os.system(pingcommand + primaryLink)):
                   while (os.system(pingcommand + primaryLink)):    # Lets run this forever or until the link is up
                       time.sleep(pinginterval)
                       pass
+                  #We're out of the loop so lets add the interface 
                   os.system("ovs-vsctl add-port "+bridgename+ " " ifname " -- set Interface " +ifname+" type=vxlan options:local_ip="+local_ip+"options:remote_ip="+primarylink)
         time.sleep(pinginterval)
 
