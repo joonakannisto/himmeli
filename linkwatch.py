@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, sys, getopt, time, string
+import os, sys, getopt, time, string, json
 #import netifaces as ni
 
 def main():
@@ -15,7 +15,7 @@ def main():
     helpdesk="linkwatch -p <primary tun dest ip> -s <secondary tun dest ip> -b <bridge>"
     ofportFlow=""
     ofportNumber=""
-    
+
     print("Welcome to linkwatch SDN himmeli")
     try:
         opts, args = getopt.getopt(sys.argv[1:], "p:s:b:h", ["help", "primaryLink=", "secondaryLink=","bridgname="])
@@ -45,8 +45,12 @@ def main():
                   print("Secondary link is available for usage")
                   print("Clearing the flows from the bridge "+bridgename)
                   ofportFlow=os.popen("ovsdb-tool query '[\"Open_vSwitch\", {\"op\":\"select\", \"table\":\"Interface\", \"where\": [[\"name\",\"==\",\""+ifname+"\"]]}]'").read()
-                  ofportNumber=ofportNumber[ofportNumber.rfind("\"ofport\":")+9:ofportNumber.rfind("\"ofport\":")+10]
-                  
+                  #ofportNumber=ofportNumber[ofportNumber.rfind("\"ofport\":")+9:ofportNumber.rfind("\"ofport\":")+10]
+                  try:
+                      ofportFlow=json.loads(ofortFlow)
+                      ofportnumber=ofportFlow[0]["rows"]["ofport"]
+                  except:
+                      os.system("ovs-ofctl del-flows "+bridgename + " cookie=0x20000000000000/-1")
                   #                  os.system("ovs-ofctl del-flows "+bridgename + " cookie=0x20000000000000/-1")
 
 #             elif (os.system(pingcommand + primaryLink)):
