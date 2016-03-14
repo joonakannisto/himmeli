@@ -55,8 +55,8 @@ def main():
                         print("Something weird just happened, clearing all flows using the Floodlight cookie...")
                         os.system("ovs-ofctl del-flows "+bridgename + " cookie=0x20000000000000/-1")
                     else:
-                        print("Clearing the flows in "+bridgename + " / " + ifname + " in port: " +ofportnumber)
-                        os.system("ovs-ofctl del-flows "+bridgename+" out_port="+ofportnumber)
+                        print("Clearing the flows in "+bridgename + " / " + ifname + " in port: " +str(ofportnumber))
+                        os.system("ovs-ofctl del-flows "+bridgename+" out_port="+str(ofportnumber))
                         
 
                 while (os.system(pingcommand + primaryLink)):    # Lets run this forever or until the link is up
