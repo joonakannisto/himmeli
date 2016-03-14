@@ -37,7 +37,7 @@ def main():
             bridgename = arg
         elif opt in ("-i", "--ifname"):
             ifname = arg
-    print("----------------------------------------------------------------------------------")
+    print("-------------------------------------------------------------")
     while True:
         if(os.system(pingcommand + primaryLink)):
             if(os.system(pingcommand + primaryLink)):
@@ -56,7 +56,7 @@ def main():
                         os.system("ovs-ofctl del-flows "+bridgename + " cookie=0x20000000000000/-1")
                     else:
                         print("Clearing the flows in "+bridgename + " / " + ifname + " in port: " +ofportnumber)
-                        os.system("ovs-ofctl del-rows "+bridgename+" out_ports="+ofportnumber)
+                        os.system("ovs-ofctl del-flows "+bridgename+" out_port="+ofportnumber)
                         
 
                 while (os.system(pingcommand + primaryLink)):    # Lets run this forever or until the link is up
