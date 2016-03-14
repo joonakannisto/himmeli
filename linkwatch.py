@@ -20,7 +20,7 @@ def main():
     print("Welcome to linkwatch SDN himmeli")
     print("--------------------------------")
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "i:p:s:b:h", ["ifname","help", "primaryLink=", "secondaryLink=","bridgname="])
+        opts, args = getopt.getopt(sys.argv[1:], "i:p:s:b:h:l", ["ifname","help", "primaryLink=", "secondaryLink=","bridgname=","local_ip="])
     except getopt.GetoptError as err:
         print (err)
         print (helpdesk)
@@ -37,27 +37,33 @@ def main():
             bridgename = arg
         elif opt in ("-i", "--ifname"):
             ifname = arg
+        elif opt in ("-l", "--local_ip")
+
     print("-------------------------------------------------------------")
     while True:
         if(os.system(pingcommand + primaryLink)):
             if(os.system(pingcommand + primaryLink)):
         # Two pings before so that it does not flap unnecessarily
         # If secondaryLink is available we can save half a second of waiting
-                if not (os.system(pingcommand + secondaryLink)):
-                    print("Secondary link is available for usage")
+        # Rely on lazy order evaluation
+                if ((not (os.system(pingcommand + secondaryLink)) or os.system(pingcommand+primaryLink)):
+                    print("Secondary link is available for usage or three strikes for the primary")
 
                     ofportFlow=os.popen("ovsdb-tool query '[\"Open_vSwitch\", {\"op\":\"select\", \"table\":\"Interface\", \"where\": [[\"name\",\"==\",\""+ifname+"\"]]}]'").read()
-                    
+
                     try:
                         ofportFlow=json.loads(ofportFlow)
                         ofportnumber=ofportFlow[0]["rows"][0]["ofport"]
-                    except:
-                        print("Something weird just happened, clearing all flows using the Floodlight cookie...")
-                        os.system("ovs-ofctl del-flows "+bridgename + " cookie=0x20000000000000/-1")
-                    else:
+                        print("Remove the interface"+bridgename + " / " + ifname)
+                        os.system("ovs-vsctl del-port "+bridgename+ " "+ ifname)
                         print("Clearing the flows in "+bridgename + " / " + ifname + " in port: " +str(ofportnumber))
                         os.system("ovs-ofctl del-flows "+bridgename+" out_port="+str(ofportnumber))
-                        
+                    except:
+                        print("Something weird just happened, clearing all flows using the Floodlight cookie...")
+                        os.system("ovs-vsctl del-port "+bridgename+ " "+ ifname)
+                        os.system("ovs-ofctl del-flows "+bridgename + " cookie=0x20000000000000/-1")
+
+
 
                 while (os.system(pingcommand + primaryLink)):    # Lets run this forever or until the link is up
                     time.sleep(pinginterval)
@@ -66,7 +72,7 @@ def main():
                 print("-------------------------------------------------------------")
                 print("The link is up again, continuing watching the primary link...")
                 print("-------------------------------------------------------------")
-
+                os.system("ovs-vsctl add-port "+bridgename+ " "+ ifname " -- set Interface " +ifname+" type=vxlan options:local_ip="+local_ip +" options:remote_ip="+primaryLink+" options:key=42"))
         time.sleep(pinginterval)
 
 
