@@ -12,13 +12,15 @@ def main():
     waitsec = "0.5"
     pinginterval = 2
     pingcommand= "ping -c 1 -w "+waitsec+ " "
-    helpdesk="linkwatch -p <primary tun dest ip> -s <secondary tun dest ip> -b <bridge>"
+    helpdesk="linkwatch -p <primary tun dest ip> -s <secondary tun dest ip> -b <bridge> -i <vxlan name>"
     ofportFlow=""
     ofportNumber=""
 
+    print("--------------------------------")
     print("Welcome to linkwatch SDN himmeli")
+    print("--------------------------------")
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "p:s:b:h", ["help", "primaryLink=", "secondaryLink=","bridgname="])
+        opts, args = getopt.getopt(sys.argv[1:], "i:p:s:b:h", ["ifname","help", "primaryLink=", "secondaryLink=","bridgname="])
     except getopt.GetoptError as err:
         print (err)
         print (helpdesk)
@@ -33,36 +35,48 @@ def main():
             secondaryLink = arg
         elif opt in ("-b", "--bridge"):
             bridgename = arg
-        elif opt in "-i", "--ifname"):
+        elif opt in ("-i", "--ifname"):
             ifname = arg
     print("----------------------------------------------------------------------------------")
     while True:
         if(os.system(pingcommand + primaryLink)):
-           if(os.system(pingcommand + primaryLink)):
+            if(os.system(pingcommand + primaryLink)):
         # Two pings before so that it does not flap unnecessarily
         # If secondaryLink is available we can save half a second of waiting
-              if not (os.system(pingcommand + secondaryLink)):
-                  print("Secondary link is available for usage")
-                  print("Clearing the flows from the bridge "+bridgename)
-                  ofportFlow=os.popen("ovsdb-tool query '[\"Open_vSwitch\", {\"op\":\"select\", \"table\":\"Interface\", \"where\": [[\"name\",\"==\",\""+ifname+"\"]]}]'").read()
-                  #ofportNumber=ofportNumber[ofportNumber.rfind("\"ofport\":")+9:ofportNumber.rfind("\"ofport\":")+10]
-                  try:
-                      ofportFlow=json.loads(ofportFlow)
-                      ofportnumber=ofportFlow[0]["rows"]["ofport"]
-                  except:
-                      os.system("ovs-ofctl del-flows "+bridgename + " cookie=0x20000000000000/-1")
-                  #                  os.system("ovs-ofctl del-flows "+bridgename + " cookie=0x20000000000000/-1")
+                if not (os.system(pingcommand + secondaryLink)):
+                    print("Secondary link is available for usage")
 
-#             elif (os.system(pingcommand + primaryLink)):
-#                 os.system("ovs-vsctl del-port"+bridgename+ " "+ifname)
-#                 print("Clearing the flows from the bridge "+bridgename)
-#                 os.system("ovs-ofctl del-flows "+bridgename + " cookie=0x20000000000000/-1")
+                    ofportFlow=os.popen("ovsdb-tool query '[\"Open_vSwitch\", {\"op\":\"select\", \"table\":\"Interface\", \"where\": [[\"name\",\"==\",\""+ifname+"\"]]}]'").read()
+                    
+                    try:
+                        ofportFlow=json.loads(ofportFlow)
+                        ofportnumber=ofportFlow[0]["rows"][0]["ofport"]
+                    except:
+                        print("Something weird just happened, clearing all flows using the Floodlight cookie...")
+                        os.system("ovs-ofctl del-flows "+bridgename + " cookie=0x20000000000000/-1")
+                    else:
+                        print("Clearing the flows in "+bridgename + " / " + ifname + " in port: " +ofportnumber)
+                        os.system("ovs-ofctl del-rows "+bridgename+" out_ports="+ofportnumber)
+                        
 
-              while (os.system(pingcommand + primaryLink)):    # Lets run this forever or until the link is up
-                      time.sleep(pinginterval)
-                      pass
+                while (os.system(pingcommand + primaryLink)):    # Lets run this forever or until the link is up
+                    time.sleep(pinginterval)
+                    pass
+
+                print("-------------------------------------------------------------")
+                print("The link is up again, continuing watching the primary link...")
+                print("-------------------------------------------------------------")
+
         time.sleep(pinginterval)
 
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+#ofportNumber=ofportNumber[ofportNumber.rfind("\"ofport\":")+9:ofportNumber.rfind("\"ofport\":")+10]
