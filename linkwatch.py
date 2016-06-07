@@ -37,7 +37,7 @@ def main():
             bridgename = arg
         elif opt in ("-i", "--ifname"):
             ifname = arg
-        elif opt in ("-l", "--local_ip")
+        elif opt in ("-l", "--local_ip"):
             ifname = arg
     print("-------------------------------------------------------------")
     while True:
@@ -46,7 +46,7 @@ def main():
         # Two pings before so that it does not flap unnecessarily
         # If secondaryLink is available we can save half a second of waiting
         # Rely on lazy order evaluation
-                if ((not (os.system(pingcommand + secondaryLink)) or os.system(pingcommand+primaryLink)):
+                if ((not (os.system(pingcommand + secondaryLink))) or os.system(pingcommand+primaryLink)):
                     print("Secondary link is available for usage or three strikes for the primary")
 
                     ofportFlow=os.popen("ovsdb-tool query '[\"Open_vSwitch\", {\"op\":\"select\", \"table\":\"Interface\", \"where\": [[\"name\",\"==\",\""+ifname+"\"]]}]'").read()
