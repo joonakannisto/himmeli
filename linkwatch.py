@@ -38,7 +38,7 @@ def main():
         elif opt in ("-i", "--ifname"):
             ifname = arg
         elif opt in ("-l", "--local_ip")
-
+            ifname = arg
     print("-------------------------------------------------------------")
     while True:
         if(os.system(pingcommand + primaryLink)):
@@ -72,7 +72,7 @@ def main():
                 print("-------------------------------------------------------------")
                 print("The link is up again, continuing watching the primary link...")
                 print("-------------------------------------------------------------")
-                os.system("ovs-vsctl add-port "+bridgename+ " "+ ifname " -- set Interface " +ifname+" type=vxlan options:local_ip="+local_ip +" options:remote_ip="+primaryLink+" options:key=42"))
+                os.system("ovs-vsctl add-port "+bridgename+ " "+ ifname +" -- set Interface " +ifname+" type=vxlan options:local_ip="+local_ip +" options:remote_ip="+primaryLink+" options:key=42")
         time.sleep(pinginterval)
 
 
